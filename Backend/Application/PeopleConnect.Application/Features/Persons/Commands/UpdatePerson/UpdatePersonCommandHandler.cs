@@ -42,32 +42,67 @@ public class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCommand, P
             _currentUserService.UserId
         );
 
-        // Atualizar contatos específicos - remover apenas os tipos que estão sendo atualizados
-        var contactTypesToUpdate = new[] { "Email", "Telefone", "Celular" };
-        var contactsToRemove = person.Contacts.Where(c => contactTypesToUpdate.Contains(c.Type)).ToList();
+        var existingContacts = person.Contacts.ToList();
         
-        foreach (var contact in contactsToRemove)
-        {
-            person.RemoveContact(contact.Id);
-        }
-
-        // Adicionar novos contatos
+        var existingEmail = existingContacts.FirstOrDefault(c => c.Type == "Email");
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
-            var emailContact = new ContactInfo("Email", request.Email, true, person.Id);
-            person.AddContact(emailContact);
+            if (existingEmail == null)
+            {
+                var emailContact = new ContactInfo("Email", request.Email, true, person.Id);
+                person.AddContact(emailContact);
+            }
+            else if (existingEmail.Value != request.Email)
+            {
+                person.RemoveContact(existingEmail.Id);
+                var emailContact = new ContactInfo("Email", request.Email, existingEmail.IsPrimary, person.Id);
+                person.AddContact(emailContact);
+            }
+        }
+        else if (existingEmail != null)
+        {
+            person.RemoveContact(existingEmail.Id);
         }
 
+        var existingTelefone = existingContacts.FirstOrDefault(c => c.Type == "Telefone");
         if (!string.IsNullOrWhiteSpace(request.Telefone))
         {
-            var telefoneContact = new ContactInfo("Telefone", request.Telefone, true, person.Id);
-            person.AddContact(telefoneContact);
+            if (existingTelefone == null)
+            {
+                var telefoneContact = new ContactInfo("Telefone", request.Telefone, true, person.Id);
+                person.AddContact(telefoneContact);
+            }
+            else if (existingTelefone.Value != request.Telefone)
+            {
+                person.RemoveContact(existingTelefone.Id);
+                var telefoneContact = new ContactInfo("Telefone", request.Telefone, existingTelefone.IsPrimary, person.Id);
+                person.AddContact(telefoneContact);
+            }
+        }
+        else if (existingTelefone != null)
+        {
+            person.RemoveContact(existingTelefone.Id);
         }
 
+        var existingCelular = existingContacts.FirstOrDefault(c => c.Type == "Celular");
         if (!string.IsNullOrWhiteSpace(request.Celular))
         {
-            var celularContact = new ContactInfo("Celular", request.Celular, !string.IsNullOrWhiteSpace(request.Telefone) ? false : true, person.Id);
-            person.AddContact(celularContact);
+            if (existingCelular == null)
+            {
+                var hasTelefone = !string.IsNullOrWhiteSpace(request.Telefone) || existingContacts.Any(c => c.Type == "Telefone");
+                var celularContact = new ContactInfo("Celular", request.Celular, !hasTelefone, person.Id);
+                person.AddContact(celularContact);
+            }
+            else if (existingCelular.Value != request.Celular)
+            {
+                person.RemoveContact(existingCelular.Id);
+                var celularContact = new ContactInfo("Celular", request.Celular, existingCelular.IsPrimary, person.Id);
+                person.AddContact(celularContact);
+            }
+        }
+        else if (existingCelular != null)
+        {
+            person.RemoveContact(existingCelular.Id);
         }
 
         var updatedPerson = await _personRepository.UpdateAsync(person, cancellationToken);
