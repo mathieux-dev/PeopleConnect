@@ -179,3 +179,6 @@ docker-compose down
 | **Line Coverage** | **91.70%** | 🟢 Excelente |
 | **Total de Testes** | 216 | ✅ Todos passando |
 | **Duração** | 30.2s | - |
+
+## TODO:
+Existe um bug que ao atualizar a página em uma das principais rotas (/login, /register, /persons), ela retorna um 404 e só volta ao normal ao acessar a URL principal: https://peopleconnect-app.onrender.com/
