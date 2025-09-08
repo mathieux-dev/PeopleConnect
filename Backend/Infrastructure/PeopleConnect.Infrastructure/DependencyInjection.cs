@@ -13,14 +13,11 @@ namespace PeopleConnect.Infrastructure;
 
 public static class DependencyInjection
 {
-    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
+    public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration, string connectionString)
     {
-        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
-                               configuration.GetConnectionString("DefaultConnection");
-
-        if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("YOUR_DATABASE_URL_GOES_HERE"))
+        if (string.IsNullOrEmpty(connectionString))
         {
-            throw new InvalidOperationException("A Connection String do banco de dados não foi encontrada ou não foi substituída. Verifique as variáveis de ambiente.");
+            throw new InvalidOperationException("A Connection String fornecida para a camada de Infraestrutura é nula ou vazia.");
         }
 
         services.AddDbContext<DataContext>(options =>
@@ -36,7 +33,7 @@ public static class DependencyInjection
 
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
-        
+
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
 

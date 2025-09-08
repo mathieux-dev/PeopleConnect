@@ -127,7 +127,11 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddApplication();
-builder.Services.AddInfrastructure(builder.Configuration);
+
+var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
+                       builder.Configuration.GetConnectionString("DefaultConnection");
+
+builder.Services.AddInfrastructure(builder.Configuration, connectionString!);
 
 var app = builder.Build();
 
