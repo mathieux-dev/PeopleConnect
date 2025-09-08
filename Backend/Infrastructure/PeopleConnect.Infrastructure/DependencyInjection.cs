@@ -23,7 +23,7 @@ public static class DependencyInjection
         services.AddDbContext<DataContext>(options =>
             options.UseNpgsql(connectionString, postgresOptions =>
             {
-                postgresOptions.MigrationsAssembly("PeopleConnect.Api");
+                postgresOptions.MigrationsAssembly("PeopleConnect.Infrastructure");
             }));
 
         AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
