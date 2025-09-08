@@ -93,24 +93,51 @@ builder.Services.AddCors(options =>
 builder.Services.AddApplication();
 
 string connectionString;
-var dbHost = Environment.GetEnvironmentVariable("PGHOST");
-var dbPort = Environment.GetEnvironmentVariable("PGPORT");
-var dbUser = Environment.GetEnvironmentVariable("PGUSER");
-var dbPass = Environment.GetEnvironmentVariable("PGPASSWORD");
-var dbName = Environment.GetEnvironmentVariable("PGDATABASE");
 
-if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPass) && !string.IsNullOrEmpty(dbName))
+// Primeiro tentar pegar a ConnectionStrings__DefaultConnection (configurada no Render)
+var renderConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+
+if (!string.IsNullOrEmpty(renderConnectionString))
 {
-    connectionString = $"Host={dbHost};Port={dbPort ?? "5432"};Database={dbName};Username={dbUser};Password={dbPass};SslMode=Require;Trust Server Certificate=true;";
+    // Se for uma URL do PostgreSQL, adicionar SSL
+    if (renderConnectionString.StartsWith("postgresql://") || renderConnectionString.StartsWith("postgres://"))
+    {
+        // Adicionar SSL Mode se não estiver presente
+        if (!renderConnectionString.Contains("sslmode") && !renderConnectionString.Contains("SslMode"))
+        {
+            var separator = renderConnectionString.Contains("?") ? "&" : "?";
+            connectionString = $"{renderConnectionString}{separator}sslmode=require";
+        }
+        else
+        {
+            connectionString = renderConnectionString;
+        }
+    }
+    else
+    {
+        // Se for formato tradicional, adicionar SSL
+        connectionString = renderConnectionString.Contains("SslMode") ? 
+            renderConnectionString : 
+            $"{renderConnectionString};SslMode=Require;Trust Server Certificate=true";
+    }
 }
 else
 {
-    connectionString = builder.Configuration.GetConnectionString("DefaultConnection")!;
-}
+    // Fallback para variáveis separadas
+    var dbHost = Environment.GetEnvironmentVariable("PGHOST");
+    var dbPort = Environment.GetEnvironmentVariable("PGPORT");
+    var dbUser = Environment.GetEnvironmentVariable("PGUSER");
+    var dbPass = Environment.GetEnvironmentVariable("PGPASSWORD");
+    var dbName = Environment.GetEnvironmentVariable("PGDATABASE");
 
-if (string.IsNullOrEmpty(connectionString))
-{
-    throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados.");
+    if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPass) && !string.IsNullOrEmpty(dbName))
+    {
+        connectionString = $"Host={dbHost};Port={dbPort ?? "5432"};Database={dbName};Username={dbUser};Password={dbPass};SslMode=Require;Trust Server Certificate=true;";
+    }
+    else
+    {
+        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure ConnectionStrings__DefaultConnection no Render.");
+    }
 }
 
 builder.Services.AddInfrastructure(builder.Configuration, connectionString);
@@ -142,6 +169,12 @@ using (var scope = app.Services.CreateScope())
     try
     {
         logger.LogInformation("Verificando e aplicando migrations...");
+        
+        // Log de debug da connection string (sem mostrar senha)
+        var debugConnectionString = connectionString.Length > 50 ? 
+            connectionString.Substring(0, 50) + "..." : connectionString;
+        logger.LogInformation("Debug - Connection string (início): {DebugString}", debugConnectionString);
+        
         context.Database.Migrate();
         logger.LogInformation("Migrations verificadas/aplicadas com sucesso.");
     }
