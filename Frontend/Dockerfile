@@ -2,14 +2,17 @@
 FROM node:18-alpine AS build
 WORKDIR /app
 
+# Declarar build argument para a URL da API
+ARG VITE_API_URL=http://localhost/api/v1
+
 # Copy package files
 COPY package*.json ./
 
 # Install dependencies (including dev dependencies for build)
 RUN npm install
 
-# Set environment variable for API URL (must be before COPY to override .env file)
-ENV VITE_API_URL=http://localhost:5001/api/v1
+# Set environment variable for API URL
+ENV VITE_API_URL=$VITE_API_URL
 
 # Copy source code
 COPY . .

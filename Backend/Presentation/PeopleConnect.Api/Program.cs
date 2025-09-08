@@ -1,5 +1,6 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
 using PeopleConnect.Api.Middleware;
@@ -9,6 +10,13 @@ using System.Text;
 using Asp.Versioning;
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Configurar logging para produção
+if (builder.Environment.IsProduction())
+{
+    builder.Logging.ClearProviders();
+    builder.Logging.AddJsonConsole();
+}
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -77,7 +85,9 @@ builder.Services.AddApiVersioning(opt =>
 });
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = jwtSettings["SecretKey"] ?? "your-super-secret-key-that-is-very-long-and-secure-for-jwt-tokens";
+var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? 
+                 jwtSettings["SecretKey"] ?? 
+                 throw new InvalidOperationException("JWT Secret Key não configurado. Configure via variável de ambiente JWT_SECRET.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -94,13 +104,25 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
+// Configurar CORS
 builder.Services.AddCors(options =>
 {
+    // Política permissiva para desenvolvimento
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
               .AllowAnyMethod()
               .AllowAnyHeader();
+    });
+    
+    // Política restritiva para produção
+    options.AddPolicy("ProductionPolicy", policy =>
+    {
+        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost";
+        policy.WithOrigins(frontendUrl)
+              .WithMethods("GET", "POST", "PUT", "DELETE")
+              .WithHeaders("Content-Type", "Authorization")
+              .AllowCredentials();
     });
 });
 
@@ -109,18 +131,30 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 var app = builder.Build();
 
-app.UseSwagger();
-app.UseSwaggerUI(c =>
+// Configurar Swagger apenas em desenvolvimento
+if (!app.Environment.IsProduction())
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "PeopleConnect API v1");
-    c.RoutePrefix = string.Empty;
-});
+    app.UseSwagger();
+    app.UseSwaggerUI(c =>
+    {
+        c.SwaggerEndpoint("/swagger/v1/swagger.json", "PeopleConnect API v1");
+        c.RoutePrefix = string.Empty;
+    });
+}
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 
-app.UseCors("AllowAll");
+// Aplicar política de CORS apropriada para o ambiente
+if (app.Environment.IsProduction())
+{
+    app.UseCors("ProductionPolicy");
+}
+else
+{
+    app.UseCors("AllowAll");
+}
 
 app.UseAuthentication();
 app.UseAuthorization();
@@ -129,10 +163,30 @@ app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
+// Aplicar migrations em produção
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PeopleConnect.Infrastructure.Persistence.DataContext>();
-    await context.Database.EnsureCreatedAsync();
+    var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    
+    if (app.Environment.IsProduction())
+    {
+        try
+        {
+            logger.LogInformation("Aplicando migrations do banco de dados...");
+            context.Database.Migrate();
+            logger.LogInformation("Migrations aplicadas com sucesso.");
+        }
+        catch (Exception ex)
+        {
+            logger.LogError(ex, "Erro ao aplicar migrations do banco de dados.");
+            throw;
+        }
+    }
+    else
+    {
+        context.Database.EnsureCreated();
+    }
 }
 
 app.Run();
