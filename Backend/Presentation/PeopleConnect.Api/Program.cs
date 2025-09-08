@@ -150,11 +150,51 @@ if (!app.Environment.IsProduction())
 
 app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 app.UseHttpsRedirection();
+
+// Configurar Headers de Segurança
+app.Use(async (context, next) =>
+{
+    context.Response.Headers["X-Content-Type-Options"] = "nosniff";
+    context.Response.Headers["X-Frame-Options"] = "DENY";
+    context.Response.Headers["X-XSS-Protection"] = "1; mode=block";
+    context.Response.Headers["Referrer-Policy"] = "strict-origin-when-cross-origin";
+    await next();
+});
+
 app.UseCors(app.Environment.IsProduction() ? "ProductionPolicy" : "AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
 app.MapControllers();
-app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
+
+// Health checks e endpoints de debug
+app.MapGet("/", () => Results.Ok(new { 
+    service = "PeopleConnect API", 
+    status = "running", 
+    timestamp = DateTime.UtcNow,
+    version = "1.0.0"
+}));
+
+app.MapGet("/health", () => Results.Ok(new { 
+    status = "healthy", 
+    timestamp = DateTime.UtcNow,
+    database = "connected"
+}));
+
+// Endpoint de debug para verificar configuração
+app.MapGet("/debug/config", (IConfiguration config) => 
+{
+    var hasDbHost = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DB_HOST"));
+    var hasDbUrl = !string.IsNullOrEmpty(Environment.GetEnvironmentVariable("DATABASE_URL"));
+    
+    return Results.Ok(new 
+    { 
+        environment = Environment.GetEnvironmentVariable("ASPNETCORE_ENVIRONMENT"),
+        hasDbHost = hasDbHost,
+        hasDbUrl = hasDbUrl,
+        port = Environment.GetEnvironmentVariable("PORT"),
+        timestamp = DateTime.UtcNow
+    });
+});
 
 // Aplicar migrations
 using (var scope = app.Services.CreateScope())
@@ -171,7 +211,40 @@ using (var scope = app.Services.CreateScope())
             connectionString.Substring(0, 50) + "..." : connectionString;
         logger.LogInformation("Debug - Connection string (início): {DebugString}", debugConnectionString);
         
-        context.Database.Migrate();
+        logger.LogInformation("Testando conexão com banco de dados...");
+        var canConnect = await context.Database.CanConnectAsync();
+        logger.LogInformation("Conexão com banco: {CanConnect}", canConnect);
+        
+        if (!canConnect)
+        {
+            throw new InvalidOperationException("Não foi possível conectar ao banco de dados");
+        }
+        
+        logger.LogInformation("Verificando migrations pendentes...");
+        var pendingMigrations = await context.Database.GetPendingMigrationsAsync();
+        logger.LogInformation("Migrations pendentes: {Count}", pendingMigrations.Count());
+        
+        if (pendingMigrations.Any())
+        {
+            logger.LogInformation("Aplicando {Count} migrations...", pendingMigrations.Count());
+            foreach (var migration in pendingMigrations)
+            {
+                logger.LogInformation("Migration pendente: {Migration}", migration);
+            }
+            
+            await context.Database.MigrateAsync();
+            logger.LogInformation("Todas as migrations foram aplicadas!");
+        }
+        else
+        {
+            logger.LogInformation("Banco de dados já está atualizado!");
+        }
+        
+        // Verificar se as tabelas foram criadas
+        logger.LogInformation("Verificando tabelas criadas...");
+        var tableCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'").FirstAsync();
+        logger.LogInformation("Total de tabelas no banco: {TableCount}", tableCount);
+        
         logger.LogInformation("Migrations verificadas/aplicadas com sucesso.");
     }
     catch (Exception ex)
