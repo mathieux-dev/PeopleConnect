@@ -1,5 +1,4 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
@@ -9,9 +8,28 @@ using PeopleConnect.Infrastructure;
 using System.Text;
 using Asp.Versioning;
 
+// Função auxiliar para converter a URL do Render
+string ConvertPostgresUrlToConnectionString(string url)
+{
+    if (string.IsNullOrEmpty(url)) return string.Empty;
+
+    var uri = new Uri(url);
+    var userInfo = uri.UserInfo.Split(':');
+
+    var user = userInfo[0];
+    var password = userInfo[1];
+    var host = uri.Host;
+    var port = uri.Port;
+    var database = uri.AbsolutePath.TrimStart('/');
+
+    // Formato ADO.NET clássico que o EF Core/Npgsql entendem perfeitamente.
+    // SslMode=Require e Trust Server Certificate=true são recomendados para ambientes de nuvem.
+    return $"Host={host};Port={port};Database={database};Username={user};Password={password};SslMode=Require;Trust Server Certificate=true;";
+}
+
+
 var builder = WebApplication.CreateBuilder(args);
 
-// Configurar logging para produção
 if (builder.Environment.IsProduction())
 {
     builder.Logging.ClearProviders();
@@ -21,6 +39,7 @@ if (builder.Environment.IsProduction())
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 
+#region Service Configuration
 builder.Services.AddSwaggerGen(c =>
 {
     c.SwaggerDoc("v1", new OpenApiInfo 
@@ -85,9 +104,9 @@ builder.Services.AddApiVersioning(opt =>
 });
 
 var jwtSettings = builder.Configuration.GetSection("JwtSettings");
-var secretKey = Environment.GetEnvironmentVariable("JWT_SECRET") ?? 
-                 jwtSettings["SecretKey"] ?? 
-                 throw new InvalidOperationException("JWT Secret Key não configurado. Configure via variável de ambiente JWT_SECRET.");
+var secretKey = Environment.GetEnvironmentVariable("JwtSettings__SecretKey") ?? 
+                jwtSettings["SecretKey"] ?? 
+                throw new InvalidOperationException("JWT Secret Key não configurado.");
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
     .AddJwtBearer(options =>
@@ -104,10 +123,8 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// Configurar CORS
 builder.Services.AddCors(options =>
 {
-    // Política permissiva para desenvolvimento
     options.AddPolicy("AllowAll", policy =>
     {
         policy.AllowAnyOrigin()
@@ -115,33 +132,34 @@ builder.Services.AddCors(options =>
               .AllowAnyHeader();
     });
     
-    // Política restritiva para produção
     options.AddPolicy("ProductionPolicy", policy =>
     {
         var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL") ?? "http://localhost";
         policy.WithOrigins(frontendUrl)
               .WithMethods("GET", "POST", "PUT", "DELETE")
-              .WithHeaders("Content-Type", "Authorization")
-              .AllowCredentials();
+              .WithHeaders("Content-Type", "Authorization");
     });
 });
+#endregion
 
 builder.Services.AddApplication();
 
-// Ler connection string da configuração (incluindo variáveis de ambiente)
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// --- ALTERAÇÃO PRINCIPAL AQUI ---
+var connectionStringUrl = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
+                        builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (string.IsNullOrWhiteSpace(connectionString))
+if (string.IsNullOrEmpty(connectionStringUrl))
 {
-    throw new InvalidOperationException(
-        "String de conexão não encontrada. Configure ConnectionStrings__DefaultConnection como variável de ambiente.");
+    throw new InvalidOperationException("Connection String não encontrada.");
 }
 
-builder.Services.AddInfrastructure(builder.Configuration, connectionString);
+// Converte a URL para o formato clássico antes de passar para a camada de infraestrutura
+var formattedConnectionString = ConvertPostgresUrlToConnectionString(connectionStringUrl);
+builder.Services.AddInfrastructure(builder.Configuration, formattedConnectionString);
 
 var app = builder.Build();
 
-// Configurar Swagger apenas em desenvolvimento
+#region Pipeline Configuration
 if (!app.Environment.IsProduction())
 {
     app.UseSwagger();
@@ -156,7 +174,6 @@ app.UseMiddleware<GlobalExceptionHandlingMiddleware>();
 
 app.UseHttpsRedirection();
 
-// Aplicar política de CORS apropriada para o ambiente
 if (app.Environment.IsProduction())
 {
     app.UseCors("ProductionPolicy");
@@ -173,46 +190,16 @@ app.MapControllers();
 
 app.MapGet("/health", () => Results.Ok(new { status = "healthy", timestamp = DateTime.UtcNow }));
 
-// Aplicar migrations em produção
+// Aplicar migrations
 using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PeopleConnect.Infrastructure.Persistence.DataContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
-    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     
     if (app.Environment.IsProduction())
     {
         try
         {
-            // Log das configurações para debug (sem expor senhas)
-            var configConnectionString = configuration.GetConnectionString("DefaultConnection");
-            var hasConfigConnection = !string.IsNullOrWhiteSpace(configConnectionString);
-            var urlLength = hasConfigConnection ? configConnectionString!.Length : 0;
-            
-            logger.LogInformation("Debug - ConnectionString da configuração: {HasConnection}, Tamanho: {Length}", 
-                hasConfigConnection, urlLength);
-            
-            if (!hasConfigConnection)
-            {
-                logger.LogError("ConnectionStrings:DefaultConnection não está configurada!");
-                logger.LogInformation("Variáveis de ambiente disponíveis:");
-                
-                // Log das variáveis relacionadas (sem valores)
-                var envVars = new[] {
-                    "ConnectionStrings__DefaultConnection",
-                    "DATABASE_URL",
-                    "ASPNETCORE_ENVIRONMENT"
-                };
-                
-                foreach (var envVar in envVars)
-                {
-                    var value = Environment.GetEnvironmentVariable(envVar);
-                    logger.LogInformation("  {EnvVar}: {HasValue}", envVar, !string.IsNullOrEmpty(value));
-                }
-                
-                throw new InvalidOperationException("ConnectionStrings:DefaultConnection não configurada");
-            }
-            
             logger.LogInformation("Aplicando migrations do banco de dados...");
             context.Database.Migrate();
             logger.LogInformation("Migrations aplicadas com sucesso.");
@@ -228,6 +215,7 @@ using (var scope = app.Services.CreateScope())
         context.Database.EnsureCreated();
     }
 }
+#endregion
 
 app.Run();
 
