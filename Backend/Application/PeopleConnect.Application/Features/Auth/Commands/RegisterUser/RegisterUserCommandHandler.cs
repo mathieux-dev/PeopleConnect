@@ -56,6 +56,25 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
             user.Id
         );
 
+        // Adicionar contatos se fornecidos
+        if (!string.IsNullOrWhiteSpace(request.Person.Email))
+        {
+            var emailContact = new ContactInfo("Email", request.Person.Email, true, person.Id);
+            person.AddContact(emailContact);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Person.Telefone))
+        {
+            var telefoneContact = new ContactInfo("Telefone", request.Person.Telefone, false, person.Id);
+            person.AddContact(telefoneContact);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Person.Celular))
+        {
+            var celularContact = new ContactInfo("Celular", request.Person.Celular, false, person.Id);
+            person.AddContact(celularContact);
+        }
+
         await _personRepository.CreateAsync(person, cancellationToken);
 
         
@@ -76,7 +95,7 @@ public class RegisterUserCommandHandler : IRequestHandler<RegisterUserCommand, U
                 person.DataNascimento,
                 person.Naturalidade,
                 person.Nacionalidade,
-                new List<ContactInfoDto>(),
+                person.Contacts.Select(c => new ContactInfoDto(c.Id, c.Type, c.Value, c.IsPrimary)).ToList(),
                 person.CreatedByUserId,
                 person.UpdatedByUserId,
                 person.CreatedAt,
