@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RunSettings>
+  <DataCollectionRunSettings>
+    <DataCollectors>
+      <DataCollector friendlyName="XPlat code coverage">
+        <Configuration>
+          <Format>cobertura</Format>
+          <Include>
+            <ModulePaths>
+              <ModulePath>**/PeopleConnect.Domain.dll</ModulePath>
+              <ModulePath>**/PeopleConnect.Application.dll</ModulePath>
+              <ModulePath>**/PeopleConnect.Api.dll</ModulePath>
+            </ModulePaths>
+          </Include>
+          <Exclude>
+            <ModulePaths>
+              <ModulePath>**/PeopleConnect.Infrastructure.dll</ModulePath>
+              <ModulePath>**/PeopleConnect.*.Tests.dll</ModulePath>
+              <ModulePath>**/PeopleConnect.IntegrationTests.dll</ModulePath>
+            </ModulePaths>
+          </Exclude>
+          <ExcludeByAttribute>
+            <Attribute>Obsolete</Attribute>
+            <Attribute>GeneratedCodeAttribute</Attribute>
+            <Attribute>CompilerGeneratedAttribute</Attribute>
+            <Attribute>ExcludeFromCodeCoverageAttribute</Attribute>
+          </ExcludeByAttribute>
+          <ExcludeByFile>
+            <Path>**/Infrastructure/**</Path>
+            <Path>**/Migrations/**</Path>
+            <Path>**/Program.cs</Path>
+            <Path>**/*DbContext.cs</Path>
+          </ExcludeByFile>
+        </Configuration>
+      </DataCollector>
+    </DataCollectors>
+  </DataCollectionRunSettings>
+  <LoggerRunSettings>
+    <Loggers>
+      <Logger friendlyName="console" enabled="True" />
+      <Logger friendlyName="trx" enabled="True" />
+    </Loggers>
+  </LoggerRunSettings>
+</RunSettings>

@@ -1,0 +1,38 @@
+# Arquivos de ambiente
+.env
+.env.local
+.env.production
+
+# Logs
+*.log
+logs/
+
+# Dados do Docker
+postgres_data/
+pgadmin_data/
+
+# Cache e builds
+**/node_modules/
+**/dist/
+**/build/
+**/bin/
+**/obj/
+
+# Coverage reports
+**/coverage-report/
+**/TestResults/
+**/.nyc_output/
+
+# IDE
+.vscode/settings.json
+.vscode/launch.json
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# SSL certificates (se houver)
+ssl/

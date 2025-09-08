@@ -1,0 +1,63 @@
+# .NET artifacts
+**/bin/
+**/obj/
+**/out/
+**/.vs/
+**/.vscode/
+**/TestResults/
+**/.testcoveragerc
+
+# Dependencies
+**/node_modules/
+**/packages/
+
+# Build outputs
+**/dist/
+**/build/
+
+# Logs
+**/*.log
+**/logs/
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# IDE files
+*.swp
+*.swo
+*~
+.idea/
+*.suo
+*.user
+*.userprefs
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+**/*.md
+!README.md
+
+# Docker
+**/Dockerfile*
+**/docker-compose*
+**/.dockerignore
+
+# Environment files
+**/.env*
+!**/.env.production
+
+# Coverage reports
+**/coverage/
+**/lcov.info
+
+# Database files
+**/*.db
+**/*.sqlite

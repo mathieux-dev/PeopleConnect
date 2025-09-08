@@ -1,0 +1,263 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  .all-\[unset\] {
+    all: unset;
+  }
+}
+
+@layer utilities {
+  @keyframes scroll-left {
+    0% {
+      transform: translateX(0);
+    }
+    100% {
+      transform: translateX(-50%);
+    }
+  }
+  
+  @keyframes float-rotate {
+    0% {
+      transform: translateY(0px) rotate(0deg) translateX(0px);
+    }
+    25% {
+      transform: translateY(-10px) rotate(2deg) translateX(5px);
+    }
+    50% {
+      transform: translateY(-5px) rotate(-1deg) translateX(-3px);
+    }
+    75% {
+      transform: translateY(-15px) rotate(3deg) translateX(8px);
+    }
+    100% {
+      transform: translateY(0px) rotate(0deg) translateX(0px);
+    }
+  }
+
+  @keyframes gentle-float {
+    0% {
+      transform: translateY(0px) rotate(0deg) translateX(0px);
+    }
+    25% {
+      transform: translateY(-8px) rotate(1.5deg) translateX(3px);
+    }
+    50% {
+      transform: translateY(-4px) rotate(-0.8deg) translateX(-2px);
+    }
+    75% {
+      transform: translateY(-12px) rotate(2.2deg) translateX(6px);
+    }
+    100% {
+      transform: translateY(0px) rotate(0deg) translateX(0px);
+    }
+  }
+  
+  .animate-scroll-left {
+    animation: scroll-left 20s linear infinite;
+  }
+  
+  .animate-float-rotate {
+    animation: float-rotate 6s ease-in-out infinite;
+  }
+
+  .animate-gentle-float {
+    animation: gentle-float 5s ease-in-out infinite;
+  }
+
+  @keyframes pulse-border {
+    0%, 100% {
+      border-color: var(--color-primary-1000);
+      box-shadow: 0 0 0 0 rgba(245, 84, 66, 0.4);
+    }
+    50% {
+      border-color: var(--color-primary-500);
+      box-shadow: 0 0 0 4px rgba(245, 84, 66, 0.1);
+    }
+  }
+  
+  .animate-pulse-border {
+    animation: pulse-border 2s ease-in-out infinite;
+  }
+
+  @keyframes animate-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+
+  .animate-in {
+    animation: animate-in 0.3s ease-out;
+  }
+
+  .fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+
+  .zoom-in {
+    animation: zoom-in 0.3s ease-out;
+  }
+
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+
+  @keyframes zoom-in {
+    from { transform: scale(0.95); }
+    to { transform: scale(1); }
+  }
+}
+
+:root {
+  --body-regular-lg-font-family: "Open Sans", Helvetica;
+  --body-regular-lg-font-size: 23px;
+  --body-regular-lg-font-style: normal;
+  --body-regular-lg-font-weight: 400;
+  --body-regular-lg-letter-spacing: 0px;
+  --body-regular-lg-line-height: 120.00000476837158%;
+  --body-regular-md-font-family: "Open Sans", Helvetica;
+  --body-regular-md-font-size: 19px;
+  --body-regular-md-font-style: normal;
+  --body-regular-md-font-weight: 400;
+  --body-regular-md-letter-spacing: 0px;
+  --body-regular-md-line-height: 28px;
+  --body-regular-sm-font-family: "Open Sans", Helvetica;
+  --body-regular-sm-font-size: 16px;
+  --body-regular-sm-font-style: normal;
+  --body-regular-sm-font-weight: 400;
+  --body-regular-sm-letter-spacing: 0px;
+  --body-regular-sm-line-height: 24px;
+  --body-regular-xl-font-family: "Open Sans", Helvetica;
+  --body-regular-xl-font-size: 27px;
+  --body-regular-xl-font-style: normal;
+  --body-regular-xl-font-weight: 400;
+  --body-regular-xl-letter-spacing: 0px;
+  --body-regular-xl-line-height: 120.00000476837158%;
+  --body-regular-xs-font-family: "Open Sans", Helvetica;
+  --body-regular-xs-font-size: 13px;
+  --body-regular-xs-font-style: normal;
+  --body-regular-xs-font-weight: 400;
+  --body-regular-xs-letter-spacing: 0px;
+  --body-regular-xs-line-height: 120.00000476837158%;
+  --body-regular-xxl-font-family: "Open Sans", Helvetica;
+  --body-regular-xxl-font-size: 33px;
+  --body-regular-xxl-font-style: normal;
+  --body-regular-xxl-font-weight: 400;
+  --body-regular-xxl-letter-spacing: 0px;
+  --body-regular-xxl-line-height: 120.00000476837158%;
+  --body-semibold-lg-font-family: "Open Sans", Helvetica;
+  --body-semibold-lg-font-size: 23px;
+  --body-semibold-lg-font-style: normal;
+  --body-semibold-lg-font-weight: 600;
+  --body-semibold-lg-letter-spacing: 0px;
+  --body-semibold-lg-line-height: 120.00000476837158%;
+  --body-semibold-md-font-family: "Open Sans", Helvetica;
+  --body-semibold-md-font-size: 19px;
+  --body-semibold-md-font-style: normal;
+  --body-semibold-md-font-weight: 600;
+  --body-semibold-md-letter-spacing: 0px;
+  --body-semibold-md-line-height: 28px;
+  --body-semibold-sm-font-family: "Open Sans", Helvetica;
+  --body-semibold-sm-font-size: 16px;
+  --body-semibold-sm-font-style: normal;
+  --body-semibold-sm-font-weight: 600;
+  --body-semibold-sm-letter-spacing: 0px;
+  --body-semibold-sm-line-height: 24px;
+  --body-semibold-xl-font-family: "Open Sans", Helvetica;
+  --body-semibold-xl-font-size: 27px;
+  --body-semibold-xl-font-style: normal;
+  --body-semibold-xl-font-weight: 600;
+  --body-semibold-xl-letter-spacing: 0px;
+  --body-semibold-xl-line-height: 120.00000476837158%;
+  --body-semibold-xs-font-family: "Open Sans", Helvetica;
+  --body-semibold-xs-font-size: 13px;
+  --body-semibold-xs-font-style: normal;
+  --body-semibold-xs-font-weight: 600;
+  --body-semibold-xs-letter-spacing: 0px;
+  --body-semibold-xs-line-height: 120.00000476837158%;
+  --body-semibold-xxl-font-family: "Open Sans", Helvetica;
+  --body-semibold-xxl-font-size: 33px;
+  --body-semibold-xxl-font-style: normal;
+  --body-semibold-xxl-font-weight: 600;
+  --body-semibold-xxl-letter-spacing: 0px;
+  --body-semibold-xxl-line-height: 120.00000476837158%;
+  --color-dark-100: rgba(45, 45, 45, 0.1);
+  --color-dark-1000: rgba(45, 45, 45, 1);
+  --color-dark-250: rgba(45, 45, 45, 0.25);
+  --color-dark-50: rgba(45, 45, 45, 0.05);
+  --color-dark-500: rgba(45, 45, 45, 0.5);
+  --color-dark-750: rgba(45, 45, 45, 0.75);
+  --color-light-100: rgba(255, 255, 255, 0.1);
+  --color-light-1000: rgba(255, 255, 255, 1);
+  --color-light-250: rgba(255, 255, 255, 0.25);
+  --color-light-50: rgba(255, 255, 255, 0.05);
+  --color-light-500: rgba(255, 255, 255, 0.5);
+  --color-light-750: rgba(255, 255, 255, 0.75);
+  --color-primary-100: rgba(245, 84, 66, 0.1);
+  --color-primary-1000: rgba(245, 84, 66, 1);
+  --color-primary-500: rgba(245, 84, 66, 0.8);
+  --colorsblack: rgba(45, 45, 45, 1);
+  --headings-h1-font-family: "DM Sans", Helvetica;
+  --headings-h1-font-size: 119px;
+  --headings-h1-font-style: normal;
+  --headings-h1-font-weight: 700;
+  --headings-h1-letter-spacing: -5.95px;
+  --headings-h1-line-height: 120.00000476837158%;
+  --headings-h2-font-family: "DM Sans", Helvetica;
+  --headings-h2-font-size: 95px;
+  --headings-h2-font-style: normal;
+  --headings-h2-font-weight: 700;
+  --headings-h2-letter-spacing: -4.75px;
+  --headings-h2-line-height: 120.00000476837158%;
+  --headings-h3-font-family: "DM Sans", Helvetica;
+  --headings-h3-font-size: 76px;
+  --headings-h3-font-style: normal;
+  --headings-h3-font-weight: 700;
+  --headings-h3-letter-spacing: -3.8px;
+  --headings-h3-line-height: 120.00000476837158%;
+  --headings-h4-font-family: "DM Sans", Helvetica;
+  --headings-h4-font-size: 61px;
+  --headings-h4-font-style: normal;
+  --headings-h4-font-weight: 700;
+  --headings-h4-letter-spacing: -3.05px;
+  --headings-h4-line-height: 120.00000476837158%;
+  --headings-h5-font-family: "DM Sans", Helvetica;
+  --headings-h5-font-size: 49px;
+  --headings-h5-font-style: normal;
+  --headings-h5-font-weight: 600;
+  --headings-h5-letter-spacing: -2.45px;
+  --headings-h5-line-height: 120.00000476837158%;
+  --headings-h6-font-family: "DM Sans", Helvetica;
+  --headings-h6-font-size: 39px;
+  --headings-h6-font-style: normal;
+  --headings-h6-font-weight: 600;
+  --headings-h6-letter-spacing: -1.95px;
+  --headings-h6-line-height: 120.00000476837158%;
+  --headings-h7-font-family: "DM Sans", Helvetica;
+  --headings-h7-font-size: 31px;
+  --headings-h7-font-style: normal;
+  --headings-h7-font-weight: 600;
+  --headings-h7-letter-spacing: -1.55px;
+  --headings-h7-line-height: 120.00000476837158%;
+  --spacing-corner-radius-lg-2: 16px;
+  --spacing-corner-radius-md-2: 12px;
+  --spacing-corner-radius-sm-2: 8px;
+  --spacing-corner-radius-xl-2: 24px;
+  --spacing-corner-radius-xs-2: 4px;
+  --spacing-corner-radius-xxl-2: 32px;
+  --spacing-spacing-3xl: 42px;
+  --spacing-spacing-4xl: 80px;
+  --spacing-spacing-lg: 16px;
+  --spacing-spacing-m: 12px;
+  --spacing-spacing-sm-2: 8px;
+  --spacing-spacing-xl: 24px;
+  --spacing-spacing-xs-2: 4px;
+  --spacing-spacing-xxl: 32px;
+}

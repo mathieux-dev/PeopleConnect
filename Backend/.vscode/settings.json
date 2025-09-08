@@ -1,0 +1,27 @@
+{
+    "dotnet-test-explorer.testProjectPath": "**/*Tests.csproj",
+    "dotnet-test-explorer.runSettingsPath": ".runsettings",
+    "coverage-gutters.coverageFileNames": [
+        "coverage.cobertura.xml",
+        "lcov.info",
+        "cov.xml",
+        "coverage.xml",
+        "jacoco.xml"
+    ],
+    "coverage-gutters.showLineCoverage": true,
+    "coverage-gutters.showRulerCoverage": true,
+    "coverage-gutters.showGutterCoverage": true,
+    "coverage-gutters.xmlname": "coverage.cobertura.xml",
+    "dotnet-test-explorer.codeCoverage": true,
+    "dotnet-test-explorer.runInParallel": false,
+    "dotnet-test-explorer.useTreeView": true,
+    "files.exclude": {
+        "**/bin": true,
+        "**/obj": true
+    },
+    "search.exclude": {
+        "**/bin": true,
+        "**/obj": true,
+        "**/TestResults": true
+    }
+}
