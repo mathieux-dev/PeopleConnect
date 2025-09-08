@@ -129,6 +129,10 @@ Esta é a forma mais rápida de visualizar o projeto.
     * **URL:** `https://peopleconnect-api.onrender.com`
     * **O que faz:** Este é o cérebro da aplicação. O frontend comunica com este endereço para obter e manipular os dados. Pode aceder a rotas como `/health` ou `/api/v1/persons` (requer autenticação) para ver o seu funcionamento.
 
+# Usar usuário Admin já existente:
+    * **Email:** `admin`
+    * **Senha:** `admin123`
+
 ## 2. Execução Local via Docker (Ambiente Completo)
 
 Este método sobe toda a infraestrutura (Frontend, Backend e Banco de Dados) na sua máquina. É ideal para desenvolvimento e para garantir que tudo funciona de forma integrada.
