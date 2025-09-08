@@ -94,52 +94,45 @@ builder.Services.AddApplication();
 
 string connectionString;
 
-// Tentar múltiplas formas de obter a connection string
-var renderConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
-                            Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
-                            builder.Configuration.GetConnectionString("DefaultConnection");
+// Primeiro tentar variáveis separadas (mais confiável)
+var dbHost = Environment.GetEnvironmentVariable("DB_HOST");
+var dbPort = Environment.GetEnvironmentVariable("DB_PORT");
+var dbUser = Environment.GetEnvironmentVariable("DB_USER");
+var dbPass = Environment.GetEnvironmentVariable("DB_PASSWORD");
+var dbName = Environment.GetEnvironmentVariable("DB_NAME");
 
-if (!string.IsNullOrEmpty(renderConnectionString) && 
-    renderConnectionString != "YOUR_DATABASE_URL_GOES_HERE_VIA_ENV_VARIABLE")
+if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbUser) && 
+    !string.IsNullOrEmpty(dbPass) && !string.IsNullOrEmpty(dbName))
 {
-    // Se for uma URL do PostgreSQL, adicionar SSL
-    if (renderConnectionString.StartsWith("postgresql://") || renderConnectionString.StartsWith("postgres://"))
-    {
-        // Adicionar SSL Mode se não estiver presente
-        if (!renderConnectionString.Contains("sslmode") && !renderConnectionString.Contains("SslMode"))
-        {
-            var separator = renderConnectionString.Contains("?") ? "&" : "?";
-            connectionString = $"{renderConnectionString}{separator}sslmode=require";
-        }
-        else
-        {
-            connectionString = renderConnectionString;
-        }
-    }
-    else
-    {
-        // Se for formato tradicional, adicionar SSL
-        connectionString = renderConnectionString.Contains("SslMode") ? 
-            renderConnectionString : 
-            $"{renderConnectionString};SslMode=Require;Trust Server Certificate=true";
-    }
+    // Construir connection string com SSL
+    connectionString = $"Host={dbHost};Port={dbPort ?? "5432"};Database={dbName};Username={dbUser};Password={dbPass};SslMode=Require;Trust Server Certificate=true;";
 }
 else
 {
-    // Fallback para variáveis separadas
-    var dbHost = Environment.GetEnvironmentVariable("PGHOST");
-    var dbPort = Environment.GetEnvironmentVariable("PGPORT");
-    var dbUser = Environment.GetEnvironmentVariable("PGUSER");
-    var dbPass = Environment.GetEnvironmentVariable("PGPASSWORD");
-    var dbName = Environment.GetEnvironmentVariable("PGDATABASE");
+    // Fallback para URL completa
+    var renderConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
+                                Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
+                                builder.Configuration.GetConnectionString("DefaultConnection");
 
-    if (!string.IsNullOrEmpty(dbHost) && !string.IsNullOrEmpty(dbUser) && !string.IsNullOrEmpty(dbPass) && !string.IsNullOrEmpty(dbName))
+    if (!string.IsNullOrEmpty(renderConnectionString) && 
+        renderConnectionString != "YOUR_DATABASE_URL_GOES_HERE_VIA_ENV_VARIABLE")
     {
-        connectionString = $"Host={dbHost};Port={dbPort ?? "5432"};Database={dbName};Username={dbUser};Password={dbPass};SslMode=Require;Trust Server Certificate=true;";
+        // Converter URL para formato tradicional com SSL
+        if (renderConnectionString.StartsWith("postgresql://") || renderConnectionString.StartsWith("postgres://"))
+        {
+            var uri = new Uri(renderConnectionString);
+            connectionString = $"Host={uri.Host};Port={uri.Port};Database={uri.AbsolutePath.TrimStart('/')};Username={uri.UserInfo.Split(':')[0]};Password={uri.UserInfo.Split(':')[1]};SslMode=Require;Trust Server Certificate=true;";
+        }
+        else
+        {
+            connectionString = renderConnectionString.Contains("SslMode") ? 
+                renderConnectionString : 
+                $"{renderConnectionString};SslMode=Require;Trust Server Certificate=true";
+        }
     }
     else
     {
-        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure DATABASE_URL ou ConnectionStrings__DefaultConnection no Render.");
+        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure as variáveis DB_HOST, DB_USER, DB_PASSWORD, DB_NAME no Render.");
     }
 }
 
