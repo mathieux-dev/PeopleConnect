@@ -2,6 +2,7 @@ using MediatR;
 using PeopleConnect.Application.Contracts.Infrastructure;
 using PeopleConnect.Application.Contracts.Persistence;
 using PeopleConnect.Application.Dtos;
+using PeopleConnect.Domain.Entities;
 using PeopleConnect.Domain.Exceptions;
 
 namespace PeopleConnect.Application.Features.Persons.Commands.UpdatePerson;
@@ -40,6 +41,33 @@ public class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCommand, P
             request.Nacionalidade,
             _currentUserService.UserId
         );
+
+        // Atualizar contatos - remover todos e adicionar novos
+        // Remover contatos existentes
+        var existingContacts = person.Contacts.ToList();
+        foreach (var contact in existingContacts)
+        {
+            person.RemoveContact(contact.Id);
+        }
+
+        // Adicionar novos contatos
+        if (!string.IsNullOrWhiteSpace(request.Email))
+        {
+            var emailContact = new ContactInfo("Email", request.Email, true, person.Id);
+            person.AddContact(emailContact);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Telefone))
+        {
+            var telefoneContact = new ContactInfo("Telefone", request.Telefone, true, person.Id);
+            person.AddContact(telefoneContact);
+        }
+
+        if (!string.IsNullOrWhiteSpace(request.Celular))
+        {
+            var celularContact = new ContactInfo("Celular", request.Celular, !string.IsNullOrWhiteSpace(request.Telefone) ? false : true, person.Id);
+            person.AddContact(celularContact);
+        }
 
         var updatedPerson = await _personRepository.UpdateAsync(person, cancellationToken);
 

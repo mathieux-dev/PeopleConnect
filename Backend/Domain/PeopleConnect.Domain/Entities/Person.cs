@@ -112,6 +112,25 @@ public class Person
         }
     }
 
+    public void ClearContacts()
+    {
+        _contacts.Clear();
+        UpdatedAt = DateTime.UtcNow;
+    }
+
+    public void SetContacts(IEnumerable<ContactInfo> contacts)
+    {
+        _contacts.Clear();
+        if (contacts != null)
+        {
+            foreach (var contact in contacts)
+            {
+                _contacts.Add(contact);
+            }
+        }
+        UpdatedAt = DateTime.UtcNow;
+    }
+
     public void UpdateContact(Guid contactId, string type, string value, bool isPrimary)
     {
         var contact = _contacts.FirstOrDefault(c => c.Id == contactId);

@@ -79,7 +79,9 @@ public class PersonsController : ControllerBase
             updatePersonDto.Sexo,
             updatePersonDto.Email,
             updatePersonDto.Naturalidade,
-            updatePersonDto.Nacionalidade
+            updatePersonDto.Nacionalidade,
+            updatePersonDto.Telefone,
+            updatePersonDto.Celular
         );
 
         var result = await _mediator.Send(command);

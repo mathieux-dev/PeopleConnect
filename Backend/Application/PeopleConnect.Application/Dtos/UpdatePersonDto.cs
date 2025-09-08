@@ -6,5 +6,7 @@ public record UpdatePersonDto(
     string? Sexo = null,
     string? Email = null,
     string? Naturalidade = null,
-    string? Nacionalidade = null
+    string? Nacionalidade = null,
+    string? Telefone = null,
+    string? Celular = null
 );

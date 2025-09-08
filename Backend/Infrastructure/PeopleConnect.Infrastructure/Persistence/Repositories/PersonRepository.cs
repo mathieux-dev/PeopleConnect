@@ -44,9 +44,29 @@ public class PersonRepository : IPersonRepository
 
     public async Task<Person> UpdateAsync(Person person, CancellationToken cancellationToken = default)
     {
-        _context.Persons.Update(person);
+        var existingPerson = await _context.Persons
+            .Include(p => p.Contacts)
+            .FirstOrDefaultAsync(p => p.Id == person.Id, cancellationToken);
+
+        if (existingPerson == null)
+            throw new InvalidOperationException($"Person with Id {person.Id} not found");
+
+        // Atualizar as propriedades da pessoa
+        existingPerson.UpdateInfo(
+            person.Nome,
+            person.DataNascimento,
+            person.Sexo,
+            person.Email,
+            person.Naturalidade,
+            person.Nacionalidade,
+            person.UpdatedByUserId);
+
+        // Substituir todos os contatos
+        existingPerson.SetContacts(person.Contacts);
+
         await _context.SaveChangesAsync(cancellationToken);
-        return person;
+        
+        return await GetByIdAsync(person.Id, cancellationToken) ?? person;
     }
 
     public async Task DeleteAsync(Guid id, CancellationToken cancellationToken = default)
