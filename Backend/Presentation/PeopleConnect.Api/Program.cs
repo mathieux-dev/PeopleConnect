@@ -79,13 +79,10 @@ builder.Services.AddCors(options =>
     options.AddPolicy("AllowAll", policy => policy.AllowAnyOrigin().AllowAnyMethod().AllowAnyHeader());
     options.AddPolicy("ProductionPolicy", policy =>
     {
-        var frontendUrl = Environment.GetEnvironmentVariable("FRONTEND_URL");
-        if (!string.IsNullOrEmpty(frontendUrl))
-        {
-            policy.WithOrigins(frontendUrl)
-                  .WithMethods("GET", "POST", "PUT", "DELETE")
-                  .WithHeaders("Content-Type", "Authorization");
-        }
+        // Política permissiva para debug de CORS
+        policy.AllowAnyOrigin()
+              .AllowAnyMethod() 
+              .AllowAnyHeader();
     });
 });
 #endregion
@@ -161,6 +158,7 @@ app.Use(async (context, next) =>
     await next();
 });
 
+// CORS deve vir antes de Authentication
 app.UseCors(app.Environment.IsProduction() ? "ProductionPolicy" : "AllowAll");
 app.UseAuthentication();
 app.UseAuthorization();
@@ -192,9 +190,14 @@ app.MapGet("/debug/config", (IConfiguration config) =>
         hasDbHost = hasDbHost,
         hasDbUrl = hasDbUrl,
         port = Environment.GetEnvironmentVariable("PORT"),
+        corsPolicy = app.Environment.IsProduction() ? "ProductionPolicy" : "AllowAll",
         timestamp = DateTime.UtcNow
     });
 });
+
+// Endpoint para testar CORS
+app.MapPost("/debug/cors", () => Results.Ok(new { message = "CORS funcionando!", timestamp = DateTime.UtcNow }));
+app.MapMethods("/debug/cors", new[] { "OPTIONS" }, () => Results.Ok());
 
 // Aplicar migrations
 using (var scope = app.Services.CreateScope())
