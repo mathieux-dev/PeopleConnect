@@ -15,36 +15,27 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(this IServiceCollection services, IConfiguration configuration)
     {
-        
-        var connectionString = configuration.GetConnectionString("DefaultConnection");
-        
-        if (string.IsNullOrEmpty(connectionString))
-        {
-            
-            services.AddDbContext<DataContext>(options =>
-                options.UseInMemoryDatabase("PeopleConnectDB"));
-        }
-        else
-        {
-            
-            services.AddDbContext<DataContext>(options =>
-                options.UseNpgsql(connectionString, postgresOptions =>
-                {
-                    postgresOptions.MigrationsAssembly("PeopleConnect.Api");
-                }));
+        var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
+                               configuration.GetConnectionString("DefaultConnection");
 
-            
-            AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+        if (string.IsNullOrEmpty(connectionString) || connectionString.Contains("YOUR_DATABASE_URL_GOES_HERE"))
+        {
+            throw new InvalidOperationException("A Connection String do banco de dados não foi encontrada ou não foi substituída. Verifique as variáveis de ambiente.");
         }
 
-        
+        services.AddDbContext<DataContext>(options =>
+            options.UseNpgsql(connectionString, postgresOptions =>
+            {
+                postgresOptions.MigrationsAssembly("PeopleConnect.Api");
+            }));
+
+        AppContext.SetSwitch("Npgsql.EnableLegacyTimestampBehavior", true);
+
         services.AddScoped<IPersonRepository, PersonRepository>();
         services.AddScoped<IUserRepository, UserRepository>();
 
-        
         services.AddScoped<IJwtTokenGenerator, JwtTokenGenerator>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
-        
         
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUserService, CurrentUserService>();
