@@ -47,7 +47,5 @@ HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD curl -f http://localhost:8080/health || exit 1
 
 # Entry point
-#ENTRYPOINT ["dotnet", "PeopleConnect.Api.dll"]
+ENTRYPOINT ["dotnet", "PeopleConnect.Api.dll"]
 
-# ADICIONE ESTAS DUAS LINHAS PARA DEBUG
-CMD printenv > /tmp/env_vars.txt && cat /tmp/env_vars.txt && dotnet PeopleConnect.Api.dll
