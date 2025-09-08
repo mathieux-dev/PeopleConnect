@@ -1,8 +1,5 @@
 namespace PeopleConnect.Domain.Exceptions;
 
-
-
-
 public class UserException : DomainException
 {
     public UserException(string code, string message, object? details = null) 
