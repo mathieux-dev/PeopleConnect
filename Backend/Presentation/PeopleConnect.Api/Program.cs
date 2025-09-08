@@ -128,10 +128,16 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddApplication();
 
-var connectionString = Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ?? 
-                       builder.Configuration.GetConnectionString("DefaultConnection");
+// Ler connection string da configuração (incluindo variáveis de ambiente)
+var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
 
-builder.Services.AddInfrastructure(builder.Configuration, connectionString!);
+if (string.IsNullOrWhiteSpace(connectionString))
+{
+    throw new InvalidOperationException(
+        "String de conexão não encontrada. Configure ConnectionStrings__DefaultConnection como variável de ambiente.");
+}
+
+builder.Services.AddInfrastructure(builder.Configuration, connectionString);
 
 var app = builder.Build();
 
@@ -172,11 +178,41 @@ using (var scope = app.Services.CreateScope())
 {
     var context = scope.ServiceProvider.GetRequiredService<PeopleConnect.Infrastructure.Persistence.DataContext>();
     var logger = scope.ServiceProvider.GetRequiredService<ILogger<Program>>();
+    var configuration = scope.ServiceProvider.GetRequiredService<IConfiguration>();
     
     if (app.Environment.IsProduction())
     {
         try
         {
+            // Log das configurações para debug (sem expor senhas)
+            var configConnectionString = configuration.GetConnectionString("DefaultConnection");
+            var hasConfigConnection = !string.IsNullOrWhiteSpace(configConnectionString);
+            var urlLength = hasConfigConnection ? configConnectionString!.Length : 0;
+            
+            logger.LogInformation("Debug - ConnectionString da configuração: {HasConnection}, Tamanho: {Length}", 
+                hasConfigConnection, urlLength);
+            
+            if (!hasConfigConnection)
+            {
+                logger.LogError("ConnectionStrings:DefaultConnection não está configurada!");
+                logger.LogInformation("Variáveis de ambiente disponíveis:");
+                
+                // Log das variáveis relacionadas (sem valores)
+                var envVars = new[] {
+                    "ConnectionStrings__DefaultConnection",
+                    "DATABASE_URL",
+                    "ASPNETCORE_ENVIRONMENT"
+                };
+                
+                foreach (var envVar in envVars)
+                {
+                    var value = Environment.GetEnvironmentVariable(envVar);
+                    logger.LogInformation("  {EnvVar}: {HasValue}", envVar, !string.IsNullOrEmpty(value));
+                }
+                
+                throw new InvalidOperationException("ConnectionStrings:DefaultConnection não configurada");
+            }
+            
             logger.LogInformation("Aplicando migrations do banco de dados...");
             context.Database.Migrate();
             logger.LogInformation("Migrations aplicadas com sucesso.");
