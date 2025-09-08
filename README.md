@@ -133,6 +133,14 @@ Esta é a forma mais rápida de visualizar o projeto.
     * **Email:** `admin`
     * **Senha:** `admin123`
 
+**Aviso: Demora no Primeiro Carregamento**
+
+A API da aplicação está hospedada no plano gratuito do Render.com. Para economizar recursos, o serviço entra em modo de "sleep" (hibernação) após 15 minutos de inatividade.
+
+Isso significa que a **primeira requisição** (como o primeiro login ou o primeiro carregamento da lista de pessoas) após este período pode demorar entre **30 a 60 segundos** para ser respondida. Durante este tempo, a aplicação parecerá estar a "carregar".
+
+Este atraso inicial é um comportamento esperado. Após a API "acordar", as requisições seguintes serão rápidas.
+
 ## 2. Execução Local via Docker (Ambiente Completo)
 
 Este método sobe toda a infraestrutura (Frontend, Backend e Banco de Dados) na sua máquina. É ideal para desenvolvimento e para garantir que tudo funciona de forma integrada.
