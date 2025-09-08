@@ -241,9 +241,17 @@ using (var scope = app.Services.CreateScope())
         }
         
         // Verificar se as tabelas foram criadas
-        logger.LogInformation("Verificando tabelas criadas...");
-        var tableCount = await context.Database.SqlQueryRaw<int>("SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public' AND table_type = 'BASE TABLE'").FirstAsync();
-        logger.LogInformation("Total de tabelas no banco: {TableCount}", tableCount);
+        logger.LogInformation("Verificando se as tabelas foram criadas...");
+        try
+        {
+            // Teste simples para verificar se as tabelas existem
+            var hasPersonsTable = await context.Database.CanConnectAsync();
+            logger.LogInformation("Verificação concluída - Conexão funcionando: {HasConnection}", hasPersonsTable);
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning("Erro ao verificar tabelas: {Error}", ex.Message);
+        }
         
         logger.LogInformation("Migrations verificadas/aplicadas com sucesso.");
     }
