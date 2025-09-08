@@ -191,7 +191,9 @@ public class PersonsControllerTests : IntegrationTestBase
             Sexo: "Feminino",
             Email: "test.updated@test.com",
             Naturalidade: "Salvador",
-            Nacionalidade: "Brasileira"
+            Nacionalidade: "Brasileira",
+            Telefone: "11999887766",
+            Celular: "11988776655"
         );
 
         var updateContent = CreateJsonContent(updatePersonDto);

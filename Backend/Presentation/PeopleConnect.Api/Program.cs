@@ -129,7 +129,15 @@ else
     }
     else
     {
-        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure as variáveis DB_HOST, DB_USER, DB_PASSWORD, DB_NAME no Render.");
+        // Para testes de integração ou ambiente de desenvolvimento, use uma connection string padrão
+        if (builder.Environment.EnvironmentName == "IntegrationTests" || builder.Environment.IsDevelopment())
+        {
+            connectionString = "Host=localhost;Database=peopleconnect_test;Username=postgres;Password=postgres";
+        }
+        else
+        {
+            throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure as variáveis DB_HOST, DB_USER, DB_PASSWORD, DB_NAME no Render.");
+        }
     }
 }
 
