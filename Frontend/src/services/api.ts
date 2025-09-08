@@ -11,7 +11,7 @@ import {
   ApiError
 } from '../types/api.types';
 
-const BASE_URL = import.meta.env.VITE_API_URL || 'https://localhost:7000/api/v1';
+const BASE_URL = 'https://peopleconnect-api.onrender.com/api/v1';
 
 // Create axios instance
 export const api = axios.create({
