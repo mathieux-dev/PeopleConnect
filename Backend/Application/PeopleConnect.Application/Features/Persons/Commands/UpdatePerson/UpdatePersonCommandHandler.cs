@@ -42,10 +42,11 @@ public class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCommand, P
             _currentUserService.UserId
         );
 
-        // Atualizar contatos - remover todos e adicionar novos
-        // Remover contatos existentes
-        var existingContacts = person.Contacts.ToList();
-        foreach (var contact in existingContacts)
+        // Atualizar contatos específicos - remover apenas os tipos que estão sendo atualizados
+        var contactTypesToUpdate = new[] { "Email", "Telefone", "Celular" };
+        var contactsToRemove = person.Contacts.Where(c => contactTypesToUpdate.Contains(c.Type)).ToList();
+        
+        foreach (var contact in contactsToRemove)
         {
             person.RemoveContact(contact.Id);
         }
