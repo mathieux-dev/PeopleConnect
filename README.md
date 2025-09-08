@@ -47,10 +47,10 @@ A estrutura do projeto backend segue uma organização clara e modular, alinhada
 O backend foi construído sobre uma base sólida de **Clean Architecture**, garantindo a separação de responsabilidades e a testabilidade do código. A regra de dependência é estritamente seguida, com as camadas externas (Presentation, Infrastructure) dependendo das camadas internas (Application, Domain).
 
   * **Diagrama de Arquitetura:**
-    *(Espaço reservado para sua imagem de arquitetura)*
+    ![alt text](image.png)
 
   * **Diagrama de Entidade-Relacionamento (ER):**
-    *(Espaço reservado para seu diagrama ER)*
+    ![alt text](image-1.png)
 
 **Principais Padrões e Tecnologias:**
   * **Repository Pattern:** Abstrai o acesso a dados. As interfaces de repositório (`IPersonRepository`, `IUserRepository`) são definidas na camada de Aplicação, enquanto a implementação concreta, usando **Entity Framework Core**, reside na camada de Infraestrutura.
@@ -158,7 +158,7 @@ Após executar o comando acima, os serviços estarão disponíveis nos seguintes
 * **Aplicação Frontend:** [http://localhost:3000](http://localhost:3000)
 * **API Backend:** [http://localhost:5001](http://localhost:5001) (Pode testar o endpoint de saúde em [http://localhost:5001/health](http://localhost:5001/health))
 * **Banco de Dados (via PgAdmin):** [http://localhost:8080](http://localhost:8080)
-    * **Email:** `admin@peopleconnect.com`
+    * **Email:** `admin`
     * **Senha:** `admin123`
 
 ### Para Parar a Aplicação
