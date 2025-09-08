@@ -13,6 +13,7 @@ COPY Application/PeopleConnect.Application.Tests/*.csproj ./Application/PeopleCo
 COPY Infrastructure/PeopleConnect.Infrastructure/*.csproj ./Infrastructure/PeopleConnect.Infrastructure/
 COPY Infrastructure/PeopleConnect.Infrastructure.Tests/*.csproj ./Infrastructure/PeopleConnect.Infrastructure.Tests/
 COPY Presentation/PeopleConnect.Api/*.csproj ./Presentation/PeopleConnect.Api/
+COPY Tests/PeopleConnect.IntegrationTests/*.csproj ./Tests/PeopleConnect.IntegrationTests/
 
 # Restore dependencies
 RUN dotnet restore
