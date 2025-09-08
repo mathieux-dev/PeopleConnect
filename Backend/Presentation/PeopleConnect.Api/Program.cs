@@ -94,10 +94,13 @@ builder.Services.AddApplication();
 
 string connectionString;
 
-// Primeiro tentar pegar a ConnectionStrings__DefaultConnection (configurada no Render)
-var renderConnectionString = builder.Configuration.GetConnectionString("DefaultConnection");
+// Tentar múltiplas formas de obter a connection string
+var renderConnectionString = Environment.GetEnvironmentVariable("DATABASE_URL") ?? 
+                            Environment.GetEnvironmentVariable("ConnectionStrings__DefaultConnection") ??
+                            builder.Configuration.GetConnectionString("DefaultConnection");
 
-if (!string.IsNullOrEmpty(renderConnectionString))
+if (!string.IsNullOrEmpty(renderConnectionString) && 
+    renderConnectionString != "YOUR_DATABASE_URL_GOES_HERE_VIA_ENV_VARIABLE")
 {
     // Se for uma URL do PostgreSQL, adicionar SSL
     if (renderConnectionString.StartsWith("postgresql://") || renderConnectionString.StartsWith("postgres://"))
@@ -136,7 +139,7 @@ else
     }
     else
     {
-        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure ConnectionStrings__DefaultConnection no Render.");
+        throw new InvalidOperationException("Não foi possível determinar a Connection String do banco de dados. Configure DATABASE_URL ou ConnectionStrings__DefaultConnection no Render.");
     }
 }
 
