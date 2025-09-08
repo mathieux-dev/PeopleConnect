@@ -51,7 +51,7 @@ public class PersonRepository : IPersonRepository
         if (existingPerson == null)
             throw new InvalidOperationException($"Person with Id {person.Id} not found");
 
-        // Atualizar as propriedades da pessoa
+        // Atualizar as propriedades básicas da pessoa
         existingPerson.UpdateInfo(
             person.Nome,
             person.DataNascimento,
@@ -61,8 +61,14 @@ public class PersonRepository : IPersonRepository
             person.Nacionalidade,
             person.UpdatedByUserId);
 
-        // Substituir todos os contatos
-        existingPerson.SetContacts(person.Contacts);
+        // Remover todos os contatos existentes
+        _context.ContactInfos.RemoveRange(existingPerson.Contacts);
+        
+        // Adicionar novos contatos da entidade person
+        foreach (var contact in person.Contacts)
+        {
+            _context.ContactInfos.Add(contact);
+        }
 
         await _context.SaveChangesAsync(cancellationToken);
         

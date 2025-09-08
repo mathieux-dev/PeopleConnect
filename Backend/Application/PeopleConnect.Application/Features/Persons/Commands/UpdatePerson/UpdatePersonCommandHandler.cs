@@ -26,7 +26,6 @@ public class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCommand, P
             throw PersonException.NotFound(request.Id);
         }
 
-        
         if (!_currentUserService.CanEditPerson(request.Id))
         {
             throw AuthorizationException.CannotEditOtherUsersPerson(request.Id, _currentUserService.UserId ?? Guid.Empty);
@@ -42,67 +41,27 @@ public class UpdatePersonCommandHandler : IRequestHandler<UpdatePersonCommand, P
             _currentUserService.UserId
         );
 
-        var existingContacts = person.Contacts.ToList();
-        
-        var existingEmail = existingContacts.FirstOrDefault(c => c.Type == "Email");
+        // Limpar todos os contatos existentes
+        person.ClearContacts();
+
+        // Adicionar novos contatos baseados na request
         if (!string.IsNullOrWhiteSpace(request.Email))
         {
-            if (existingEmail == null)
-            {
-                var emailContact = new ContactInfo("Email", request.Email, true, person.Id);
-                person.AddContact(emailContact);
-            }
-            else if (existingEmail.Value != request.Email)
-            {
-                person.RemoveContact(existingEmail.Id);
-                var emailContact = new ContactInfo("Email", request.Email, existingEmail.IsPrimary, person.Id);
-                person.AddContact(emailContact);
-            }
-        }
-        else if (existingEmail != null)
-        {
-            person.RemoveContact(existingEmail.Id);
+            var emailContact = new ContactInfo("Email", request.Email, true, person.Id);
+            person.AddContact(emailContact);
         }
 
-        var existingTelefone = existingContacts.FirstOrDefault(c => c.Type == "Telefone");
         if (!string.IsNullOrWhiteSpace(request.Telefone))
         {
-            if (existingTelefone == null)
-            {
-                var telefoneContact = new ContactInfo("Telefone", request.Telefone, true, person.Id);
-                person.AddContact(telefoneContact);
-            }
-            else if (existingTelefone.Value != request.Telefone)
-            {
-                person.RemoveContact(existingTelefone.Id);
-                var telefoneContact = new ContactInfo("Telefone", request.Telefone, existingTelefone.IsPrimary, person.Id);
-                person.AddContact(telefoneContact);
-            }
-        }
-        else if (existingTelefone != null)
-        {
-            person.RemoveContact(existingTelefone.Id);
+            var telefoneContact = new ContactInfo("Telefone", request.Telefone, true, person.Id);
+            person.AddContact(telefoneContact);
         }
 
-        var existingCelular = existingContacts.FirstOrDefault(c => c.Type == "Celular");
         if (!string.IsNullOrWhiteSpace(request.Celular))
         {
-            if (existingCelular == null)
-            {
-                var hasTelefone = !string.IsNullOrWhiteSpace(request.Telefone) || existingContacts.Any(c => c.Type == "Telefone");
-                var celularContact = new ContactInfo("Celular", request.Celular, !hasTelefone, person.Id);
-                person.AddContact(celularContact);
-            }
-            else if (existingCelular.Value != request.Celular)
-            {
-                person.RemoveContact(existingCelular.Id);
-                var celularContact = new ContactInfo("Celular", request.Celular, existingCelular.IsPrimary, person.Id);
-                person.AddContact(celularContact);
-            }
-        }
-        else if (existingCelular != null)
-        {
-            person.RemoveContact(existingCelular.Id);
+            var hasTelefone = !string.IsNullOrWhiteSpace(request.Telefone);
+            var celularContact = new ContactInfo("Celular", request.Celular, !hasTelefone, person.Id);
+            person.AddContact(celularContact);
         }
 
         var updatedPerson = await _personRepository.UpdateAsync(person, cancellationToken);
