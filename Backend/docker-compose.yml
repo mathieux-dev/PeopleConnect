@@ -1,0 +1,30 @@
+services:
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: peopleconnect-backend-prod
+    restart: always
+    # A seção 'ports' foi removida. O Nginx cuidará do acesso externo.
+    environment:
+      - ASPNETCORE_ENVIRONMENT=Production
+      - ASPNETCORE_URLS=http://+:8080
+      - ConnectionStrings__DefaultConnection=${DATABASE_URL}
+      - JwtSettings__SecretKey=${JWT_SECRET}
+      - JwtSettings__Issuer=PeopleConnectAPI # Manter fixo é aceitável
+      - JwtSettings__Audience=PeopleConnectAPI # Manter fixo é aceitável
+      - JwtSettings__ExpiryInMinutes=60
+      - FRONTEND_URL=${FRONTEND_URL}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/health"]
+      interval: 45s
+      timeout: 15s
+      retries: 3
+      start_period: 90s
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
